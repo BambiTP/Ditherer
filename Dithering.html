@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dithering with 2D Array</title>
+</head>
+<body>
+<style>
+</style>
+    <canvas id="canvas"></canvas>
+  <input type="file" id="imageInput">
+  <textarea id="result" rows="10" cols="40"></textarea>
+  <script>
+        const formattedColors = [
+    { id: 0, rgb: [255, 255, 255] },
+    { id: 1, rgb: [196, 196, 196] },
+    { id: 2, rgb: [136, 136, 136] },
+    { id: 3, rgb: [85, 85, 85] },
+    { id: 4, rgb: [34, 34, 34] },
+    { id: 5, rgb: [0, 0, 0] },
+    { id: 39, rgb: [0, 54, 56] },
+    { id: 6, rgb: [0, 102, 0] },
+    { id: 49, rgb: [27, 116, 0] },
+    { id: 40, rgb: [71, 112, 80] },
+    { id: 7, rgb: [34, 177, 76] },
+    { id: 8, rgb: [2, 190, 1] },
+    { id: 9, rgb: [81, 225, 25] },
+    { id: 10, rgb: [148, 224, 68] },
+    { id: 41, rgb: [152, 251, 152] },
+    { id: 11, rgb: [251, 255, 91] },
+    { id: 12, rgb: [229, 217, 0] },
+    { id: 13, rgb: [230, 190, 12] },
+    { id: 14, rgb: [230, 149, 0] },
+    { id: 42, rgb: [255, 112, 0] },
+    { id: 21, rgb: [255, 57, 4] },
+    { id: 20, rgb: [229, 0, 0] },
+    { id: 43, rgb: [206, 41, 57] },
+    { id: 44, rgb: [255, 65, 106] },
+    { id: 19, rgb: [159, 0, 0] },
+    { id: 18, rgb: [107, 0, 0] },
+    { id: 23, rgb: [255, 117, 95] },
+    { id: 15, rgb: [160, 106, 66] },
+    { id: 17, rgb: [99, 60, 31] },
+    { id: 16, rgb: [153, 83, 13] },
+    { id: 22, rgb: [187, 79, 0] },
+    { id: 24, rgb: [255, 196, 159] },
+    { id: 25, rgb: [255, 223, 204] },
+    { id: 26, rgb: [255, 167, 209] },
+    { id: 27, rgb: [207, 110, 228] },
+    { id: 45, rgb: [125, 38, 205] },
+    { id: 28, rgb: [236, 8, 236] },
+    { id: 29, rgb: [130, 0, 128] },
+    { id: 46, rgb: [51, 0, 119] },
+    { id: 31, rgb: [2, 7, 99] },
+    { id: 30, rgb: [81, 0, 255] },
+    { id: 32, rgb: [0, 0, 234] },
+    { id: 33, rgb: [4, 75, 255] },
+    { id: 47, rgb: [0, 91, 161] },
+    { id: 34, rgb: [101, 131, 207] },
+    { id: 35, rgb: [54, 186, 255] },
+    { id: 36, rgb: [0, 131, 199] },
+    { id: 37, rgb: [0, 211, 221] },
+    { id: 38, rgb: [69, 255, 200] },
+    { id: 48, rgb: [181, 232, 238] },
+];
+
+    function findNearestColor(pixel) {
+      let minDist = Number.MAX_VALUE;
+      let nearestColorId = 0;
+
+      for (const color of formattedColors) {
+        const dist = Math.sqrt(
+          Math.pow(pixel[0] - color.rgb[0], 2) +
+          Math.pow(pixel[1] - color.rgb[1], 2) +
+          Math.pow(pixel[2] - color.rgb[2], 2)
+        );
+
+        if (dist < minDist) {
+          minDist = dist;
+          nearestColorId = color.id;
+        }
+      }
+
+      return nearestColorId;
+    }
+
+   function applyDithering(imageData) {
+  const width = imageData.width;
+  const height = imageData.height;
+  const data = imageData.data;
+
+  const ditheredArray = [];
+
+  for (let y = 0; y < height; y++) {
+    const row = [];
+    for (let x = 0; x < width; x++) {
+      const index = (y * width + x) * 4;
+      const oldPixel = [data[index], data[index + 1], data[index + 2], data[index + 3]];
+
+  
+
+if (oldPixel[3] === 0) {
+  console.log("Transparent pixel");
+  row.push(50);
+} else {
+  const nearestColorId = findNearestColor(oldPixel);
+  row.push(nearestColorId);
+}
+
+    }
+    ditheredArray.push(row);
+  }
+
+  return ditheredArray;
+}
+ const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+
+    document.getElementById('imageInput').addEventListener('change', function(event) {
+      const uploadedImage = event.target.files[0];
+      if (uploadedImage) {
+        const reader = new FileReader();
+        
+        reader.onload = function(event) {
+          const uploadedImageData = new Image();
+          uploadedImageData.onload = function() {
+            canvas.width = uploadedImageData.width;
+            canvas.height = uploadedImageData.height;
+            context.drawImage(uploadedImageData, 0, 0);
+            updateResultTextArea();
+          };
+          
+          uploadedImageData.src = event.target.result;
+        };
+        
+        reader.readAsDataURL(uploadedImage);
+      }
+    });
+
+    function updateResultTextArea() {
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      const ditheredArray = applyDithering(imageData);
+
+      const resultTextArea = document.getElementById("result");
+      resultTextArea.value = JSON.stringify(ditheredArray);
+}
+  </script>
+</body>
+</html>
