@@ -12,12 +12,72 @@
 <div>
   <a href="https://www.remove.bg/upload">https://www.remove.bg/upload</a>.
 <style>
+ table {
+    border-collapse: collapse;
+  }
+  td {
+    width: 1px;
+    height: 1px;
+  }
 </style>
     <canvas id="canvas"></canvas>
   <input type="file" id="imageInput">
+ <table id="arrayTable"></table>
   <textarea id="result" rows="10" cols="40"></textarea>
 <p>Paste this array into the userscript and click j on pixelplace</p>
   <script>
+const colorMap = {
+  0: [255, 255, 255],
+  1: [196, 196, 196],
+  2: [136, 136, 136],
+  3: [85, 85, 85],
+  4: [34, 34, 34],
+  5: [0, 0, 0],
+  39: [0, 54, 56],
+  6: [0, 102, 0],
+  49: [27, 116, 0],
+  40: [71, 112, 80],
+  7: [34, 177, 76],
+  8: [2, 190, 1],
+  9: [81, 225, 25],
+  10: [148, 224, 68],
+  41: [152, 251, 152],
+  11: [251, 255, 91],
+  12: [229, 217, 0],
+  13: [230, 190, 12],
+  14: [230, 149, 0],
+  42: [255, 112, 0],
+  21: [255, 57, 4],
+  20: [229, 0, 0],
+  43: [206, 41, 57],
+  44: [255, 65, 106],
+  19: [159, 0, 0],
+  18: [107, 0, 0],
+  23: [255, 117, 95],
+  15: [160, 106, 66],
+  17: [99, 60, 31],
+  16: [153, 83, 13],
+  22: [187, 79, 0],
+  24: [255, 196, 159],
+  25: [255, 223, 204],
+  26: [255, 167, 209],
+  27: [207, 110, 228],
+  45: [125, 38, 205],
+  28: [236, 8, 236],
+  29: [130, 0, 128],
+  46: [51, 0, 119],
+  31: [2, 7, 99],
+  30: [81, 0, 255],
+  32: [0, 0, 234],
+  33: [4, 75, 255],
+  47: [0, 91, 161],
+  34: [101, 131, 207],
+  35: [54, 186, 255],
+  36: [0, 131, 199],
+  37: [0, 211, 221],
+  38: [69, 255, 200],
+  48: [181, 232, 238]
+};
         const formattedColors = [
     { id: 0, rgb: [255, 255, 255] },
     { id: 1, rgb: [196, 196, 196] },
@@ -107,7 +167,6 @@
   
 
 if (oldPixel[3] === 0) {
-  console.log("Transparent pixel");
   row.push(50);
 } else {
   const nearestColorId = findNearestColor(oldPixel);
@@ -127,7 +186,7 @@ if (oldPixel[3] === 0) {
       const uploadedImage = event.target.files[0];
       if (uploadedImage) {
         const reader = new FileReader();
-        
+
         reader.onload = function(event) {
           const uploadedImageData = new Image();
           uploadedImageData.onload = function() {
@@ -135,21 +194,50 @@ if (oldPixel[3] === 0) {
             canvas.height = uploadedImageData.height;
             context.drawImage(uploadedImageData, 0, 0);
             updateResultTextArea();
+            displayImageTable(uploadedImageData);
           };
-          
+
           uploadedImageData.src = event.target.result;
         };
-        
+
         reader.readAsDataURL(uploadedImage);
       }
     });
 
-    function updateResultTextArea() {
+      function updateResultTextArea() {
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
       const ditheredArray = applyDithering(imageData);
 
       const resultTextArea = document.getElementById("result");
       resultTextArea.value = JSON.stringify(ditheredArray);
+}
+
+    function displayImageTable(image) {
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      const ditheredArray = applyDithering(imageData);
+
+      createTable(ditheredArray);
+    }
+function createTable(array) {
+  const table = document.getElementById("arrayTable");
+
+  for (let i = 0; i < array.length; i++) {
+    const row = document.createElement("tr");
+    for (let j = 0; j < array[i].length; j++) {
+      const cell = document.createElement("td");
+      const number = array[i][j];
+      
+      if (number === 50) {
+        cell.style.backgroundColor = "transparent"; // Set transparent background
+      } else {
+        const rgb = colorMap[number].join(",");
+        cell.style.backgroundColor = `rgb(${rgb})`;
+      }
+      
+      row.appendChild(cell);
+    }
+    table.appendChild(row);
+  }
 }
   </script>
 </body>
